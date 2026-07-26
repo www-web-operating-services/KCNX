@@ -1,439 +1,1156 @@
- <!DOCTYPE html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>KCNX OS</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>KCNX OS · Settings · Weather · WiFi</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0b0b10;
+      font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+      color: white;
+      user-select: none;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      position: relative;
+    }
 
-<style>
-body { margin:0; overflow:hidden; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:black; color:white; user-select: none; }
+    /* === BOOT SCREEN === */
+    #boot {
+      position: fixed;
+      inset: 0;
+      background: #000000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      transition: opacity 2s ease;
+      pointer-events: none;
+    }
+    #logo {
+      font-size: 52px;
+      letter-spacing: 10px;
+      font-weight: 300;
+      opacity: 0;
+      transition: 1.8s;
+      color: #f0f0ff;
+      font-family: 'Segoe UI', Roboto, sans-serif;
+    }
+    #sub {
+      margin-top: 12px;
+      opacity: 0;
+      transition: 1.8s;
+      color: #7a7a8a;
+      font-size: 13px;
+      letter-spacing: 1px;
+      font-weight: 300;
+    }
 
-/* Boot Screen */
-#boot {
-  position:fixed;width:100%;height:100%;background:black;
-  display:flex;justify-content:center;align-items:center;flex-direction:column;
-  transition:opacity 2s; z-index: 99999;
-}
-#logo { font-size:60px;letter-spacing:8px;opacity:0;transition:2s; font-weight: 300;}
-#sub {opacity:0;margin-top:10px;transition:2s;color:#888;font-size:14px;}
+    /* === TOP STATUS BAR === */
+    #topbar {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 32px;
+      padding: 0 16px;
+      background: rgba(10, 10, 18, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 9998;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 500;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      color: #ddd;
+      letter-spacing: 0.3px;
+    }
+    .status-left, .status-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    /* WiFi SVG - no text label */
+    .wifi-icon {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+    }
+    .wifi-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: none;
+      stroke: #ddd;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: all 0.3s;
+    }
+    .wifi-icon.offline svg {
+      opacity: 0.4;
+    }
+    .wifi-icon.offline .wifi-slash {
+      stroke: #ff4444;
+      stroke-width: 2.5;
+    }
+    .wifi-icon.online .wifi-slash {
+      opacity: 0;
+    }
+    
+    #time {
+      font-weight: 500;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+    }
+    #weather {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      font-weight: 400;
+    }
+    #weather .temp {
+      font-weight: 500;
+    }
+    #battery {
+      width: 24px;
+      height: 12px;
+      border: 1px solid rgba(255,255,255,0.6);
+      border-radius: 3px;
+      padding: 1px;
+      display: flex;
+    }
+    #level {
+      height: 100%;
+      background: #00e6b8;
+      width: 100%;
+      border-radius: 1px;
+      transition: width 0.6s, background 0.5s;
+    }
 
-/* Topbar */
-#topbar {
-  display: none;
-  position:fixed;
-  top:0;
-  width:100%;
-  height:30px;
-  background:rgba(10, 10, 15, 0.8);
-  backdrop-filter: blur(10px);
-  justify-content:space-between;
-  align-items:center;
-  padding:0 15px;
-  font-size:13px;
-  z-index: 9999;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  box-sizing: border-box;
-}
+    /* === DESKTOP (HOME) === */
+    #desktop {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      padding: 48px 12px 12px 12px;
+      background: radial-gradient(circle at 30% 20%, #1e1e2f, #0c0c12 90%);
+      overflow: hidden;
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      justify-content: flex-start;
+      gap: 6px 8px;
+      box-sizing: border-box;
+      position: relative;
+    }
 
-/* Network & Status Indicators */
-.status-group { display: flex; align-items: center; gap: 12px; }
-.bar{display:inline-block;width:3px;margin:1px;background:white}
-.b1{height:5px}.b2{height:8px}.b3{height:11px}.b4{height:14px}
-#battery{width:22px;height:11px;border:1px solid rgba(255,255,255,0.7);border-radius:2px;padding:1px;display:flex;}
-#level{height:100%;background:#00ffcc;width:100%;transition: width 0.5s, background 0.5s;}
+    .icon {
+      width: calc(20% - 8px);
+      min-width: 68px;
+      flex: 0 0 auto;
+      padding: 4px 2px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 14px;
+      transition: background 0.15s, transform 0.12s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      background: transparent;
+      height: calc(25% - 8px);
+      max-height: 110px;
+    }
+    .icon:hover { background: rgba(255,255,255,0.06); }
+    .icon:active { transform: scale(0.94); background: rgba(255,255,255,0.10); }
+    .icon-img {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+      flex-shrink: 0;
+    }
+    .icon-img svg {
+      width: 34px;
+      height: 34px;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .icon span {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      color: #ececf0;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+      max-width: 64px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
 
-/* Desktop Layout */
-#desktop {
-  display:none;width:100vw;height:100vh;
-  background: radial-gradient(circle at center, #1b1b2f 0%, #0a0a0f 100%);
-  padding:50px 20px 20px 20px;
-  display:flex; flex-direction: row; flex-wrap:wrap; align-content: flex-start; justify-content: flex-start;
-  gap: 20px;
-  box-sizing: border-box;
-  z-index: 1;
-}
+    /* === SETTINGS PANEL (hidden, swipe from right) === */
+    #settingsPanel {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 85%;
+      max-width: 380px;
+      height: 100vh;
+      background: #15151f;
+      z-index: 10000;
+      transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: -10px 0 40px rgba(0,0,0,0.6);
+      border-left: 1px solid rgba(255,255,255,0.05);
+      overflow-y: auto;
+      padding: 50px 20px 20px 20px;
+      font-family: 'Roboto', 'Segoe UI', sans-serif;
+    }
+    #settingsPanel.open {
+      right: 0;
+    }
+    #settingsPanel .settings-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 20px;
+    }
+    #settingsPanel .settings-header svg {
+      width: 32px;
+      height: 32px;
+      stroke: #b0b0c0;
+      stroke-width: 1.8;
+      fill: none;
+    }
+    #settingsPanel .settings-header h2 {
+      font-size: 22px;
+      font-weight: 400;
+      color: #e0e0e8;
+      letter-spacing: 0.5px;
+    }
+    .settings-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      cursor: pointer;
+      transition: background 0.15s;
+      border-radius: 8px;
+    }
+    .settings-item:hover {
+      background: rgba(255,255,255,0.04);
+    }
+    .settings-item svg {
+      width: 24px;
+      height: 24px;
+      stroke: #b0b0c0;
+      stroke-width: 1.8;
+      fill: none;
+      flex-shrink: 0;
+    }
+    .settings-item .info {
+      flex: 1;
+    }
+    .settings-item .info .label {
+      font-size: 14px;
+      font-weight: 400;
+      color: #e0e0e8;
+    }
+    .settings-item .info .desc {
+      font-size: 11px;
+      color: #8888a0;
+      margin-top: 2px;
+    }
+    .settings-item .value {
+      font-size: 13px;
+      color: #8888a0;
+    }
+    .settings-item .toggle {
+      width: 44px;
+      height: 24px;
+      background: #2a2a3a;
+      border-radius: 12px;
+      position: relative;
+      transition: 0.3s;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .settings-item .toggle.active {
+      background: #48d6b0;
+    }
+    .settings-item .toggle .thumb {
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: 0.3s;
+    }
+    .settings-item .toggle.active .thumb {
+      left: 22px;
+    }
 
-/* System Desktop Icons */
-.icon {
-  width:85px; padding:10px 5px; text-align:center; cursor:pointer; border-radius: 8px;
-  transition: background 0.2s, transform 0.1s;
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
-}
-.icon:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-2px); }
-.icon:active { transform: translateY(0); background: rgba(255, 255, 255, 0.15); }
-.icon-img { font-size: 32px; filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.3)); }
-.icon span { display:block; font-size:12px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); color: #e0e0e0; font-weight: 500;}
+    /* === WINDOW (APP CARD) === */
+    .window {
+      position: absolute;
+      top: 40px;
+      left: 8px;
+      width: calc(100% - 16px);
+      height: calc(100% - 56px);
+      background: #15151d;
+      border-radius: 24px 24px 20px 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      z-index: 9999;
+      overflow: hidden;
+      backdrop-filter: blur(2px);
+    }
+    .titlebar {
+      background: #1d1d26;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      min-height: 44px;
+    }
+    .title-text {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      color: #b0e0ff;
+      text-transform: capitalize;
+    }
+    .close-btn {
+      cursor: pointer;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+      border: none;
+      color: #aaa;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.2s;
+    }
+    .close-btn:hover { background: #e74c4c; color: white; }
+    .content {
+      flex: 1;
+      overflow: auto;
+      background: #14141c;
+      padding: 12px;
+    }
 
-/* Main OS Window Sandbox */
-.window {
-  position:absolute; top:40px; left:20px; width:calc(100% - 40px); height:calc(100% - 60px);
-  background:#121214; z-index: 1000; border-radius: 12px; overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 1px solid rgba(255, 255, 255, 0.08);
-  display: flex; flex-direction: column;
-}
+    /* --- CALCULATOR --- */
+    .calc {
+      max-width: 300px;
+      margin: 0 auto;
+      padding: 10px;
+      background: #1a1a26;
+      border-radius: 20px;
+      border: 1px solid #2b2b3a;
+    }
+    .calc input {
+      width: 100%;
+      height: 52px;
+      font-size: 24px;
+      background: #0d0d14;
+      border: 1px solid #2a2a3a;
+      color: white;
+      text-align: right;
+      padding: 0 14px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .calc button {
+      width: 22%;
+      height: 48px;
+      margin: 2%;
+      font-size: 16px;
+      border-radius: 14px;
+      border: none;
+      background: #262633;
+      color: #eee;
+      cursor: pointer;
+      transition: 0.1s;
+      font-weight: 500;
+    }
+    .calc button:active { transform: scale(0.94); }
+    .calc button.op-btn { background: #2d3748; color: #7fc9ff; }
+    .calc button.eq-btn { background: #00c8a0; color: #0b0b12; font-weight: 700; }
 
-/* Window Titlebar */
-.titlebar {
-  background:#1a1a1e; padding:12px 16px;
-  display:flex; justify-content:space-between; align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-.title-text { font-size: 13px; font-weight: 600; letter-spacing: 0.5px; color: #00ffcc; text-transform: uppercase; }
-.close-btn { 
-  cursor: pointer; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
-  border-radius: 50%; background: rgba(255,255,255,0.05); font-size: 10px; transition: background 0.2s;
-}
-.close-btn:hover { background: #ff4a4a; color: white; }
+    /* --- BROWSER --- */
+    .browser-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: #14141c;
+      border-radius: 12px;
+    }
+    .browser-tabs {
+      display: flex;
+      background: #0f0f16;
+      padding: 6px 10px 0 10px;
+      gap: 4px;
+      border-bottom: 1px solid #28283a;
+    }
+    .browser-tab {
+      background: #1a1a24;
+      color: #90909e;
+      padding: 5px 12px;
+      font-size: 11px;
+      border-radius: 12px 12px 0 0;
+      border: 1px solid transparent;
+      border-bottom: none;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .browser-tab.active {
+      background: #1e1e2a;
+      color: #fff;
+      border-color: #2e2e40;
+      font-weight: 500;
+    }
+    .browser-toolbar {
+      display: flex;
+      align-items: center;
+      padding: 4px 10px;
+      gap: 6px;
+      background: #181822;
+      border-bottom: 1px solid #28283a;
+      flex-wrap: wrap;
+    }
+    .browser-nav-btn {
+      background: transparent;
+      border: none;
+      color: #b0b0c0;
+      font-size: 15px;
+      cursor: pointer;
+      width: 30px;
+      height: 30px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .browser-nav-btn:hover { background: rgba(255,255,255,0.06); }
+    .browser-address-frame {
+      flex: 1;
+      position: relative;
+      min-width: 100px;
+    }
+    .browser-address-bar {
+      width: 100%;
+      background: #0b0b12;
+      border: 1px solid #2e2e40;
+      color: #eaeaf0;
+      padding: 4px 10px 4px 28px;
+      font-size: 12px;
+      border-radius: 40px;
+      outline: none;
+    }
+    .browser-address-bar:focus { border-color: #48d6b0; }
+    .address-icon { position: absolute; left: 10px; top: 5px; color: #666; font-size: 12px; }
+    .browser-bookmarks {
+      display: flex;
+      gap: 10px;
+      padding: 4px 12px;
+      background: #13131c;
+      border-bottom: 1px solid #28283a;
+      font-size: 10px;
+      flex-wrap: wrap;
+    }
+    .bookmark-item {
+      cursor: pointer;
+      padding: 3px 6px;
+      border-radius: 30px;
+      color: #b0b0c0;
+    }
+    .bookmark-item:hover { background: rgba(255,255,255,0.05); color: #8ad4ff; }
+    .browser-viewport {
+      flex: 1;
+      background: #0e0e16;
+      position: relative;
+      min-height: 150px;
+    }
+    .browser-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #fff;
+      display: none;
+    }
+    .browser-home-screen {
+      position: absolute;
+      inset: 0;
+      background: #12121c;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      overflow-y: auto;
+    }
+    .browser-search-logo {
+      font-size: 24px;
+      font-weight: 300;
+      color: #f0f0ff;
+      margin-bottom: 12px;
+    }
+    .browser-search-logo span { color: #48d6b0; font-weight: 600; }
+    .browser-app-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(70px, 80px));
+      gap: 12px;
+      width: 100%;
+      max-width: 360px;
+      justify-content: center;
+    }
+    .browser-app-card {
+      background: #1b1b28;
+      border: 1px solid #2a2a3a;
+      border-radius: 14px;
+      padding: 10px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .browser-app-card:active { transform: scale(0.94); background: #252536; }
+    .browser-app-card .app-logo { font-size: 24px; }
+    .browser-app-card span { font-size: 10px; color: #ccc; font-weight: 500; }
+    .recycle-placeholder {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      color: #777;
+    }
 
-/* Inner App Viewport */
-.content { flex: 1; overflow:auto; position: relative; background: #121214; }
+    /* Overlay for settings */
+    #settingsOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 9999;
+      display: none;
+      transition: opacity 0.3s;
+    }
+    #settingsOverlay.show {
+      display: block;
+    }
 
-/* Modern Browser Interface GUI Design */
-.browser-container { display: flex; flex-direction: column; height: 100%; width: 100%; background: #18181c; }
-.browser-tabs { display: flex; background: #101012; padding: 6px 10px 0 10px; gap: 4px; border-bottom: 1px solid #26262b; }
-.browser-tab { 
-  background: #1a1a1e; color: #8c8c96; padding: 8px 16px; font-size: 12px; border-radius: 8px 8px 0 0;
-  display: flex; align-items: center; gap: 8px; min-width: 140px; max-width: 200px; border: 1px solid transparent; border-bottom: none;
-}
-.browser-tab.active { background: #1c1c21; color: #fff; font-weight: 500; border-color: #26262b; position: relative; }
-
-.browser-toolbar { 
-  display: flex; align-items: center; padding: 8px 12px; background: #1c1c21; 
-  gap: 12px; border-bottom: 1px solid #26262b;
-}
-.browser-nav-btn {
-  background: none; border: none; color: #aaa; font-size: 15px; cursor: pointer;
-  width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-}
-.browser-nav-btn:hover { background: rgba(255,255,255,0.08); color: #fff; }
-
-.browser-address-frame { flex: 1; position: relative; display: flex; align-items: center; }
-.browser-address-bar { 
-  width: 100%; background: #101012; border: 1px solid #2e2e36; color: #e0e0e0;
-  padding: 7px 15px 7px 35px; font-size: 13px; border-radius: 20px; outline: none;
-}
-.browser-address-bar:focus { border-color: #00ffcc; box-shadow: 0 0 0 2px rgba(0,255,204,0.15); }
-.address-icon { position: absolute; left: 12px; color: #666; font-size: 13px; }
-
-.browser-bookmarks { display: flex; gap: 15px; padding: 4px 14px; background: #18181c; border-bottom: 1px solid #26262b; font-size: 11px; color: #aaa; }
-.bookmark-item { cursor: pointer; display: flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 4px; }
-.bookmark-item:hover { background: rgba(255,255,255,0.05); color: #00ffcc; }
-
-.browser-viewport { flex: 1; background: #101012; position: relative; }
-.browser-iframe { width: 100%; height: 100%; border: none; background: white; display: none; }
-
-.browser-home-screen {
-  position: absolute; top:0; left:0; width:100%; height:100%; background: #141419;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; overflow-y: auto;
-}
-.browser-search-logo { font-size: 36px; font-weight: 300; margin-bottom: 20px; color: #fff; letter-spacing: 2px; }
-.browser-search-logo span { color: #00ffcc; font-weight: 700; }
-.browser-app-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 100px)); gap: 20px; justify-content: center; width: 100%; max-width: 500px; margin-top: 15px;}
-.browser-app-card {
-  background: #1c1c24; border: 1px solid #2c2c38; border-radius: 10px; padding: 15px 10px;
-  display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; transition: all 0.2s;
-}
-.browser-app-card:hover { transform: translateY(-4px); border-color: #00ffcc; background: #22222c; }
-.browser-app-card .app-logo { font-size: 28px; }
-.browser-app-card span { font-size: 11px; color: #ccc; font-weight: 500; text-align: center;}
-
-/* Calculator Layout */
-.calc { max-width: 280px; margin: 20px auto; padding: 15px; background: #1a1a24; border-radius: 12px; border: 1px solid #2c2c38; }
-.calc button { width: 22%; height: 45px; margin: 3px; font-size: 15px; border-radius: 6px; border: none; background: #252533; color: white; cursor: pointer; transition: background 0.1s; }
-.calc button:hover { background: #323247; }
-.calc button.op-btn { background: #2d3748; color: #00ffcc; }
-.calc button.eq-btn { background: #00ffcc; color: #121214; font-weight: bold; }
-.calc button.eq-btn:hover { background: #00e6b8; }
-.calc input { width: 96%; height: 45px; font-size: 20px; margin-bottom: 12px; background: #0f0f15; border: 1px solid #2c2c38; color: white; text-align: right; padding-right: 10px; border-radius: 6px; outline: none; }
-</style>
+    @media (max-width: 480px) {
+      .icon { width: calc(20% - 6px); min-width: 58px; height: calc(25% - 6px); }
+      .icon-img { width: 32px; height: 32px; }
+      .icon-img svg { width: 28px; height: 28px; }
+      .icon span { font-size: 9px; max-width: 54px; }
+      #settingsPanel { width: 90%; }
+    }
+    @media (min-width: 600px) {
+      .window { left: 20px; width: calc(100% - 40px); height: calc(100% - 80px); top: 48px; }
+      .icon { width: calc(20% - 10px); height: calc(25% - 10px); max-height: 130px; }
+      .icon-img { width: 44px; height: 44px; }
+      .icon-img svg { width: 40px; height: 40px; }
+    }
+  </style>
 </head>
-
 <body>
 
+<!-- BOOT -->
 <div id="boot">
   <div id="logo">KCNX</div>
-  <div id="sub">Kedlestone Cartes Normal Xenodocial</div>
+  <div id="sub">Kedlestone · Cartes · Normal · Xenodocial</div>
 </div>
 
+<!-- TOP BAR -->
 <div id="topbar">
-  <div class="status-group">
-    <div>
-      <span class="bar b1"></span>
-      <span class="bar b2"></span>
-      <span class="bar b3"></span>
-      <span class="bar b4"></span> <span style="font-weight:600;">4G</span>
+  <div class="status-left">
+    <!-- WiFi icon only - no text label -->
+    <div class="wifi-icon online" id="wifiIndicator">
+      <svg viewBox="0 0 24 24">
+        <path d="M5 12.55a11 11 0 0 1 14.08 0" stroke="#ddd"/>
+        <path d="M1.42 9a16 16 0 0 1 21.16 0" stroke="#ddd"/>
+        <path d="M8.53 16.11a6 6 0 0 1 6.94 0" stroke="#ddd"/>
+        <circle cx="12" cy="20" r="1.5" fill="#ddd" stroke="none"/>
+        <!-- Slash overlay - hidden when online -->
+        <line x1="4" y1="20" x2="20" y2="4" stroke="#ff4444" stroke-width="2.5" class="wifi-slash" opacity="0"/>
+      </svg>
     </div>
   </div>
-
-  <div id="time" style="font-weight: 500; letter-spacing: 0.5px;">--:--</div>
-
-  <div class="status-group">
+  <div id="time">--:--</div>
+  <div class="status-right">
+    <div id="weather">
+      <span id="weatherIcon">☀️</span>
+      <span class="temp" id="temperature">--°</span>
+    </div>
     <div id="battery"><div id="level"></div></div>
   </div>
 </div>
 
+<!-- DESKTOP -->
 <div id="desktop">
-  <div class="icon" onclick="window.open('https://kcnx5730.github.io/ASTRONYX-data.html/', '_blank')">
-    <div class="icon-img">📝</div><span>Notepad</span>
+  <!-- App icons (same as before, abbreviated for space) -->
+  <div class="icon" onclick="window.open('https://kcnx5730.github.io/ASTRONYX-data.html/','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#f9ca24" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 8h8" stroke="#f0932b"/><path d="M8 12h6" stroke="#eb4d4b"/><path d="M8 16h4" stroke="#6ab04c"/></svg></div>
+    <span>Notepad</span>
   </div>
-  
   <div class="icon" onclick="openApp('calc')">
-    <div class="icon-img">🧮</div><span>Calculator</span>
+    <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#7ed6df" stroke-width="1.8"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#22a6b3"/><path d="M8 6h8" stroke="#f0932b"/><path d="M8 10h8" stroke="#eb4d4b"/><path d="M8 14h4" stroke="#6ab04c"/><path d="M8 18h4" stroke="#f9ca24"/><circle cx="16" cy="10" r="1.5" fill="#f0932b" stroke="none"/><circle cx="16" cy="14" r="1.5" fill="#eb4d4b" stroke="none"/><circle cx="16" cy="18" r="1.5" fill="#6ab04c" stroke="none"/></svg></div>
+    <span>Calculator</span>
   </div>
-  
   <div class="icon" onclick="openApp('browser')">
-    <div class="icon-img">🌐</div><span>Browser</span>
+    <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#f0932b" stroke-width="1.8"><circle cx="12" cy="12" r="10" stroke="#22a6b3"/><path d="M2 12h20" stroke="#6ab04c"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="#eb4d4b"/></svg></div>
+    <span>Browser</span>
   </div>
-  
   <div class="icon" onclick="openApp('recycle')">
-    <div class="icon-img">🗑️</div><span>Recycle</span>
+    <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#6ab04c" stroke-width="1.8"><path d="M3 6h18" stroke="#f0932b"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" stroke="#eb4d4b"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="#f9ca24"/><path d="M10 11v6" stroke="#22a6b3"/><path d="M14 11v6" stroke="#7ed6df"/></svg></div>
+    <span>Recycle</span>
+  </div>
+  <div class="icon" onclick="window.open('https://poki.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#f0932b" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2" stroke="#eb4d4b"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" stroke="#6ab04c"/></svg></div>
+    <span>Store</span>
+  </div>
+  <div class="icon" onclick="window.open('https://kcnx5730.github.io/kcnxPLAYER/','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#7ed6df" stroke-width="1.8"><circle cx="8" cy="18" r="4" stroke="#f0932b"/><circle cx="18" cy="16" r="4" stroke="#eb4d4b"/><path d="M12 18V4l8 2v10" stroke="#6ab04c"/></svg></div>
+    <span>Music</span>
+  </div>
+  <div class="icon" onclick="window.open('https://kcnx5730.github.io/Messenger-KCNX/','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#f9ca24" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="#22a6b3"/></svg></div>
+    <span>Messenger</span>
+  </div>
+  <div class="icon" onclick="window.open('https://www.google.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#4285F4"/><path d="M12 2v20" stroke="#fff" stroke-width="2"/><path d="M2 12h20" stroke="#fff" stroke-width="2"/></svg></div>
+    <span>Search</span>
+  </div>
+  <div class="icon" onclick="window.open('https://maps.google.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11a8 8 0 0 1 16 0c0 6.5-8 11-8 11z" fill="#34A853"/><circle cx="12" cy="11" r="3" fill="#EA4335"/></svg></div>
+    <span>Maps</span>
+  </div>
+  <div class="icon" onclick="window.open('https://www.youtube.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="4" fill="#FF0000"/><polygon points="9.75 8.5 16 12 9.75 15.5 9.75 8.5" fill="#fff"/></svg></div>
+    <span>YouTube</span>
+  </div>
+  <div class="icon" onclick="window.open('https://play.google.com/store','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><path d="M4 4l12 8-12 8V4z" fill="#34A853"/><path d="M16 12l4-2.5-4-2.5v5z" fill="#EA4335"/><path d="M16 12l4 2.5-4 2.5v-5z" fill="#FBBC05"/></svg></div>
+    <span>Play Store</span>
+  </div>
+  <div class="icon" onclick="window.open('https://photos.google.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="#F4B400"/><circle cx="8.5" cy="8.5" r="1.5" fill="#EA4335"/><path d="M21 15l-5-5L5 21" stroke="#fff" stroke-width="2"/></svg></div>
+    <span>Photos</span>
+  </div>
+  <div class="icon" onclick="window.open('https://calendar.google.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" fill="#4285F4"/><path d="M3 10h18" stroke="#fff" stroke-width="2"/><path d="M8 2v4" stroke="#fff" stroke-width="2"/><path d="M16 2v4" stroke="#fff" stroke-width="2"/></svg></div>
+    <span>Calendar</span>
+  </div>
+  <div class="icon" onclick="window.open('https://keep.google.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" fill="#F4B400"/><path d="M8 8h8" stroke="#333" stroke-width="2"/><path d="M8 12h6" stroke="#333" stroke-width="2"/><path d="M8 16h4" stroke="#333" stroke-width="2"/></svg></div>
+    <span>Keep</span>
+  </div>
+  <div class="icon" onclick="window.open('https://www.netflix.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2" fill="#E50914"/><text x="12" y="18" font-size="14" text-anchor="middle" fill="#fff" font-weight="bold" font-family="Arial">N</text></svg></div>
+    <span>Netflix</span>
+  </div>
+  <div class="icon" onclick="window.open('https://www.amazon.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#232F3E"/><path d="M8 15.5v-7l4 3.5-4 3.5z" fill="#FF9900"/><path d="M16 15.5v-7l-4 3.5 4 3.5z" fill="#FF9900"/></svg></div>
+    <span>Amazon</span>
+  </div>
+  <div class="icon" onclick="window.open('https://www.spotify.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1DB954"/><path d="M8 10a5 5 0 0 1 8 0" stroke="#fff" stroke-width="1.5" fill="none"/><path d="M9 13a3 3 0 0 1 6 0" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="12" cy="16" r="1" fill="#fff"/></svg></div>
+    <span>Spotify</span>
+  </div>
+  <div class="icon" onclick="window.open('https://www.twitter.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1DA1F2"/><path d="M8 16c3 0 4-2 4-4V8" stroke="#fff" stroke-width="2" fill="none"/><path d="M16 8l-2 2" stroke="#fff" stroke-width="2"/><path d="M16 12l-2-2" stroke="#fff" stroke-width="2"/></svg></div>
+    <span>Twitter</span>
+  </div>
+  <div class="icon" onclick="window.open('https://www.instagram.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#E4405F"/><circle cx="12" cy="12" r="5" fill="#fff"/><circle cx="17.5" cy="6.5" r="1.5" fill="#fff"/></svg></div>
+    <span>Instagram</span>
+  </div>
+  <div class="icon" onclick="window.open('https://www.facebook.com','_blank')">
+    <div class="icon-img"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1877F2"/><path d="M16 8l-2 2" stroke="#fff" stroke-width="2"/><path d="M16 12l-2-2" stroke="#fff" stroke-width="2"/></svg></div>
+    <span>Facebook</span>
+  </div>
+</div>
+
+<!-- SETTINGS OVERLAY -->
+<div id="settingsOverlay"></div>
+
+<!-- SETTINGS PANEL (hidden, swipe from right) -->
+<div id="settingsPanel">
+  <div class="settings-header">
+    <svg viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3"/>
+      <path d="M12 1v3"/>
+      <path d="M12 20v3"/>
+      <path d="M4.22 4.22l2.12 2.12"/>
+      <path d="M17.66 17.66l2.12 2.12"/>
+      <path d="M1 12h3"/>
+      <path d="M20 12h3"/>
+      <path d="M4.22 19.78l2.12-2.12"/>
+      <path d="M17.66 6.34l2.12-2.12"/>
+    </svg>
+    <h2>Settings</h2>
   </div>
   
-  <div class="icon" onclick="window.open('https://poki.com', '_blank')">
-    <div class="icon-img">🛒</div><span>Store</span>
+  <div class="settings-item">
+    <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+    <div class="info"><div class="label">Display</div><div class="desc">Brightness, dark mode</div></div>
+    <div class="value">Auto</div>
   </div>
   
-  <div class="icon" onclick="window.open('https://kcnx5730.github.io/kcnxPLAYER/', '_blank')">
-    <div class="icon-img">🎵</div><span>Music Player</span>
+  <div class="settings-item">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <div class="info"><div class="label">Wi-Fi</div><div class="desc">Connected to KCNX_Network</div></div>
+    <div class="toggle active" onclick="this.classList.toggle('active')"><div class="thumb"></div></div>
   </div>
   
-  <!-- New Messenger App Icon -->
-  <div class="icon" onclick="window.open('https://kcnx5730.github.io/Messenger-KCNX/', '_blank')">
-    <div class="icon-img">💬</div><span>Messenger</span>
+  <div class="settings-item">
+    <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8"/><path d="M8 12h6"/><path d="M8 16h4"/></svg>
+    <div class="info"><div class="label">Bluetooth</div><div class="desc">Off</div></div>
+    <div class="toggle" onclick="this.classList.toggle('active')"><div class="thumb"></div></div>
+  </div>
+  
+  <div class="settings-item">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>
+    <div class="info"><div class="label">Location</div><div class="desc">On</div></div>
+    <div class="toggle active" onclick="this.classList.toggle('active')"><div class="thumb"></div></div>
+  </div>
+  
+  <div class="settings-item">
+    <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M8 12h8"/></svg>
+    <div class="info"><div class="label">Sound & Vibration</div><div class="desc">Ring, silent, vibrate</div></div>
+    <div class="value">Ring</div>
+  </div>
+  
+  <div class="settings-item">
+    <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <div class="info"><div class="label">Security</div><div class="desc">Fingerprint, face unlock</div></div>
+    <div class="value">On</div>
+  </div>
+  
+  <div class="settings-item">
+    <svg viewBox="0 0 24 24"><path d="M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9.5"/><polyline points="16 2 22 8 16 8"/><line x1="10" y1="14" x2="21" y2="3"/><line x1="21" y1="3" x2="16" y2="3"/><line x1="16" y1="8" x2="16" y2="8"/></svg>
+    <div class="info"><div class="label">Storage</div><div class="desc">32.4 GB used of 128 GB</div></div>
+    <div class="value">75%</div>
+  </div>
+  
+  <div class="settings-item">
+    <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    <div class="info"><div class="label">Battery</div><div class="desc">Charging, battery health</div></div>
+    <div class="value">85%</div>
+  </div>
+  
+  <div class="settings-item">
+    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <div class="info"><div class="label">Accounts</div><div class="desc">Google, KCNX, email</div></div>
+    <div class="value">3</div>
+  </div>
+  
+  <div class="settings-item">
+    <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+    <div class="info"><div class="label">About Phone</div><div class="desc">KCNX OS 3.0, build KX-2026</div></div>
+    <div class="value">v3.0</div>
   </div>
 </div>
 
 <audio id="audio" src="https://files.catbox.moe/qmismt.mp3"></audio>
 
 <script>
-/* System Configuration & Variables */
-const boot = document.getElementById('boot');
-const logo = document.getElementById('logo');
-const sub = document.getElementById('sub');
-const desktop = document.getElementById('desktop');
-const topbar = document.getElementById('topbar');
-const time = document.getElementById('time');
-const level = document.getElementById('level');
-const audio = document.getElementById('audio');
+  (function() {
+    // === BOOT SEQUENCE ===
+    const boot = document.getElementById('boot');
+    const logo = document.getElementById('logo');
+    const sub = document.getElementById('sub');
+    const desktop = document.getElementById('desktop');
+    const topbar = document.getElementById('topbar');
+    const timeEl = document.getElementById('time');
+    const level = document.getElementById('level');
+    const audio = document.getElementById('audio');
+    const wifiIndicator = document.getElementById('wifiIndicator');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const settingsOverlay = document.getElementById('settingsOverlay');
 
-setTimeout(()=>{logo.style.opacity=1;sub.style.opacity=1},1000);
-setTimeout(()=>boot.style.opacity=0,3500);
-setTimeout(()=>{
-  boot.style.display="none";
-  desktop.style.display="flex";
-  topbar.style.display="flex";   
-  audio.currentTime=15;
-  audio.play().catch(()=>{});
-},4500);
+    setTimeout(() => { logo.style.opacity = '1'; sub.style.opacity = '1'; }, 1000);
+    setTimeout(() => { boot.style.opacity = '0'; }, 3500);
+    setTimeout(() => {
+      boot.style.display = 'none';
+      desktop.style.display = 'flex';
+      topbar.style.display = 'flex';
+      try { audio.currentTime = 15; audio.play(); } catch (_) {}
+    }, 4500);
 
-/* Realtime Clock */
-setInterval(()=>{
-  let d=new Date();
-  time.innerText=d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-},1000);
+    // === TIME (12-hour with AM/PM) ===
+    function updateTime() {
+      const d = new Date();
+      let hours = d.getHours();
+      const minutes = d.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      timeEl.textContent = `${hours}:${minutes} ${ampm}`;
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
 
-/* Battery Simulation */
-let lvl=100;
-setInterval(()=>{
-  lvl--; if(lvl<0) lvl=100;
-  level.style.width=lvl+"%";
-  if(lvl>50) level.style.background="#00ffcc";
-  else if(lvl>20) level.style.background="#ffbb00";
-  else level.style.background="#ff4a4a";
-},5000);
-
-/* Application Window Manager Engine */
-function openApp(app){
-  let win=document.createElement("div");
-  win.className="window";
-
-  let bar=document.createElement("div");
-  bar.className="titlebar";
-  bar.innerHTML=`<div class='title-text'>${app}</div> <span class='close-btn' onclick='this.parentElement.parentElement.remove()'>✕</span>`;
-
-  let content=document.createElement("div");
-  content.className="content";
-
-  if(app=="calc"){
-    content.innerHTML=`
-      <div class="calc">
-        <input id="display" readonly><br>
-        <button class="op-btn" onclick="clearAll()">AC</button>
-        <button class="op-btn" onclick="del()">DEL</button>
-        <button class="op-btn" onclick="add('(')">(</button>
-        <button class="op-btn" onclick="add(')')">)</button><br>
-        <button onclick="add('7')">7</button>
-        <button onclick="add('8')">8</button>
-        <button onclick="add('9')">9</button>
-        <button class="op-btn" onclick="add('/')">÷</button><br>
-        <button onclick="add('4')">4</button>
-        <button onclick="add('5')">5</button>
-        <button onclick="add('6')">6</button>
-        <button class="op-btn" onclick="add('*')">×</button><br>
-        <button onclick="add('1')">1</button>
-        <button onclick="add('2')">2</button>
-        <button onclick="add('3')">3</button>
-        <button class="op-btn" onclick="add('-')">−</button><br>
-        <button onclick="add('0')">0</button>
-        <button onclick="add('.')">.</button>
-        <button class="eq-btn" onclick="calculate()">=</button>
-        <button class="op-btn" onclick="add('+')">+</button><br>
-        <button class="op-btn" onclick="add('Math.sqrt(')">√</button>
-        <button class="op-btn" onclick="add('Math.sin(')">sin</button>
-        <button class="op-btn" onclick="add('Math.cos(')">cos</button>
-        <button class="op-btn" onclick="add('Math.tan(')">tan</button>
-      </div>`;
-  }
-  else if(app=="browser"){
-    content.innerHTML = `
-      <div class="browser-container">
-        <div class="browser-tabs">
-          <div class="browser-tab active">
-            <span>🌐 New Tab</span>
-          </div>
-        </div>
-        
-        <div class="browser-toolbar">
-          <button class="browser-nav-btn" onclick="browserHome(this)" title="Home">🏠</button>
-          <button class="browser-nav-btn" title="Back">◀</button>
-          <button class="browser-nav-btn" title="Forward">▶</button>
-          <button class="browser-nav-btn" onclick="browserRefresh(this)" title="Refresh">🔄</button>
+    // === WEATHER (from wttr.in) ===
+    function fetchWeather() {
+      fetch('https://wttr.in?format=%C+%t&lang=en')
+        .then(res => res.text())
+        .then(data => {
+          const parts = data.trim().split(/\s+/);
+          const temp = parts[parts.length - 1] || '--°';
+          const condition = parts.slice(0, -1).join(' ') || 'Unknown';
+          document.getElementById('temperature').textContent = temp;
           
-          <div class="browser-address-frame">
-            <span class="address-icon">🔍</span>
-            <input class="browser-address-bar" type="text" placeholder="Type wiki/maps to load inside, or search to open a new tab..." onkeydown="if(event.key==='Enter') browserRouteEngine(this)">
-          </div>
-        </div>
+          // Simple weather icon mapping
+          const iconMap = {
+            'clear': '☀️',
+            'sunny': '☀️',
+            'partly': '⛅',
+            'cloud': '☁️',
+            'rain': '🌧️',
+            'drizzle': '🌦️',
+            'thunder': '⛈️',
+            'snow': '❄️',
+            'mist': '🌫️',
+            'fog': '🌫️'
+          };
+          let icon = '🌤️';
+          const lower = condition.toLowerCase();
+          for (const [key, value] of Object.entries(iconMap)) {
+            if (lower.includes(key)) { icon = value; break; }
+          }
+          document.getElementById('weatherIcon').textContent = icon;
+        })
+        .catch(() => {
+          document.getElementById('temperature').textContent = '--°';
+          document.getElementById('weatherIcon').textContent = '🌤️';
+        });
+    }
+    fetchWeather();
+    setInterval(fetchWeather, 600000); // every 10 min
 
-        <div class="browser-bookmarks">
-          <div class="bookmark-item" onclick="browserHandleClick(this, 'https://en.m.wikipedia.org')">📚 Wikipedia</div>
-          <div class="bookmark-item" onclick="browserHandleClick(this, 'https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d14115.115857217316!2d94.478!3d27.483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1700000000000')">🗺️ Google Maps</div>
-          <div class="bookmark-item" onclick="browserHandleClick(this, 'https://bing.com')">🔍 Bing Search</div>
-        </div>
-        
-        <div class="browser-viewport">
-          <div class="browser-home-screen">
-            <div class="browser-search-logo">KCNX<span>Navigator</span></div>
+    // === WiFi STATUS (with slash overlay) ===
+    function updateWiFi() {
+      const online = navigator.onLine;
+      const wifiEl = document.getElementById('wifiIndicator');
+      const slash = wifiEl.querySelector('.wifi-slash');
+      if (online) {
+        wifiEl.classList.remove('offline');
+        wifiEl.classList.add('online');
+        if (slash) slash.setAttribute('opacity', '0');
+      } else {
+        wifiEl.classList.remove('online');
+        wifiEl.classList.add('offline');
+        if (slash) slash.setAttribute('opacity', '1');
+      }
+    }
+    window.addEventListener('online', updateWiFi);
+    window.addEventListener('offline', updateWiFi);
+    updateWiFi();
 
-            <div class="browser-app-grid">
-              <div class="browser-app-card" onclick="browserHandleClick(this, 'https://en.m.wikipedia.org')">
-                <div class="app-logo">🌐</div><span>Wikipedia</span>
-              </div>
-              <div class="browser-app-card" onclick="browserHandleClick(this, 'https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d14115.115857217316!2d94.478!3d27.483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1700000000000')">🗺️ Maps Embed</div>
-              <div class="browser-app-card" onclick="browserHandleClick(this, 'https://bing.com')">
-                <div class="app-logo">🔍</div><span>Bing Engine</span>
-              </div>
-              <div class="browser-app-card" onclick="browserHandleClick(this, 'https://google.com')">
-                <div class="app-logo">✨</div><span>Google</span>
+    // === BATTERY ===
+    let lvl = 100;
+    setInterval(() => {
+      lvl -= 1;
+      if (lvl < 0) lvl = 100;
+      level.style.width = lvl + '%';
+      if (lvl > 50) level.style.background = '#00e6b8';
+      else if (lvl > 20) level.style.background = '#f2b83a';
+      else level.style.background = '#e74c4c';
+    }, 5000);
+
+    // === SETTINGS PANEL (swipe from right) ===
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let isSwiping = false;
+
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      isSwiping = true;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!isSwiping) return;
+      touchEndX = e.changedTouches[0].screenX;
+      const diff = touchStartX - touchEndX;
+      const isOpen = settingsPanel.classList.contains('open');
+      
+      // Swipe left from right edge (detect gesture)
+      if (touchStartX > window.innerWidth - 50 && diff > 80) {
+        openSettings();
+        isSwiping = false;
+      } else if (isOpen && diff < -80) {
+        closeSettings();
+        isSwiping = false;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => {
+      isSwiping = false;
+    }, { passive: true });
+
+    // Also support mouse drag for desktop
+    let mouseDownX = 0;
+    let isDragging = false;
+    document.addEventListener('mousedown', (e) => {
+      mouseDownX = e.screenX;
+      isDragging = true;
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const diff = mouseDownX - e.screenX;
+      if (mouseDownX > window.innerWidth - 50 && diff > 100) {
+        openSettings();
+        isDragging = false;
+      }
+    });
+    document.addEventListener('mouseup', () => { isDragging = false; });
+
+    // Click on overlay to close
+    settingsOverlay.addEventListener('click', closeSettings);
+
+    // Also settings icon on desktop (hidden trigger: double-tap on time)
+    let timeClicks = 0;
+    timeEl.addEventListener('click', () => {
+      timeClicks++;
+      if (timeClicks === 2) {
+        openSettings();
+        timeClicks = 0;
+      }
+      setTimeout(() => { timeClicks = 0; }, 500);
+    });
+
+    function openSettings() {
+      settingsPanel.classList.add('open');
+      settingsOverlay.classList.add('show');
+    }
+
+    function closeSettings() {
+      settingsPanel.classList.remove('open');
+      settingsOverlay.classList.remove('show');
+    }
+
+    // === APP WINDOW ===
+    window.openApp = function(app) {
+      const existing = document.querySelector('.window');
+      if (existing) existing.remove();
+
+      const win = document.createElement('div');
+      win.className = 'window';
+      win.setAttribute('data-app', app);
+
+      const bar = document.createElement('div');
+      bar.className = 'titlebar';
+      bar.innerHTML = `<div class="title-text">${app}</div> <button class="close-btn" onclick="this.closest('.window').remove()">✕</button>`;
+
+      const content = document.createElement('div');
+      content.className = 'content';
+
+      if (app === 'calc') {
+        content.innerHTML = `
+          <div class="calc">
+            <input id="display" readonly>
+            <div style="display:flex;flex-wrap:wrap;">
+              <button class="op-btn" onclick="clearAll()">AC</button>
+              <button class="op-btn" onclick="del()">DEL</button>
+              <button class="op-btn" onclick="add('(')">(</button>
+              <button class="op-btn" onclick="add(')')">)</button>
+              <button onclick="add('7')">7</button><button onclick="add('8')">8</button><button onclick="add('9')">9</button>
+              <button class="op-btn" onclick="add('/')">÷</button>
+              <button onclick="add('4')">4</button><button onclick="add('5')">5</button><button onclick="add('6')">6</button>
+              <button class="op-btn" onclick="add('*')">×</button>
+              <button onclick="add('1')">1</button><button onclick="add('2')">2</button><button onclick="add('3')">3</button>
+              <button class="op-btn" onclick="add('-')">−</button>
+              <button onclick="add('0')">0</button><button onclick="add('.')">.</button>
+              <button class="eq-btn" onclick="calculate()">=</button>
+              <button class="op-btn" onclick="add('+')">+</button>
+              <button class="op-btn" onclick="add('Math.sqrt(')">√</button>
+              <button class="op-btn" onclick="add('Math.sin(')">sin</button>
+              <button class="op-btn" onclick="add('Math.cos(')">cos</button>
+              <button class="op-btn" onclick="add('Math.tan(')">tan</button>
+            </div>
+          </div>`;
+      } else if (app === 'browser') {
+        content.innerHTML = `
+          <div class="browser-container">
+            <div class="browser-tabs"><div class="browser-tab active"><span>🌐 New Tab</span></div></div>
+            <div class="browser-toolbar">
+              <button class="browser-nav-btn" onclick="browserHome(this)">🏠</button>
+              <button class="browser-nav-btn" onclick="browserRefresh(this)">🔄</button>
+              <div class="browser-address-frame">
+                <span class="address-icon">🔍</span>
+                <input class="browser-address-bar" placeholder="wiki / maps or search…" onkeydown="if(event.key==='Enter') browserRouteEngine(this)">
               </div>
             </div>
-          </div>
-          <iframe class="browser-iframe"></iframe>
-        </div>
-      </div>`;
-  }
-  else if(app=="recycle"){
-    content.innerHTML="<div style='padding:20px;'><h3>Recycle Bin</h3><p style='color:#666;'>Empty 🗑️</p></div>";
-  }
+            <div class="browser-bookmarks">
+              <span class="bookmark-item" onclick="browserHandleClick(this,'https://en.m.wikipedia.org')">📚 Wikipedia</span>
+              <span class="bookmark-item" onclick="browserHandleClick(this,'https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d14115.115857217316!2d94.478!3d27.483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1700000000000')">🗺️ Maps</span>
+              <span class="bookmark-item" onclick="browserHandleClick(this,'https://bing.com')">🔍 Bing</span>
+            </div>
+            <div class="browser-viewport">
+              <div class="browser-home-screen">
+                <div class="browser-search-logo">KCNX<span>Navigator</span></div>
+                <div class="browser-app-grid">
+                  <div class="browser-app-card" onclick="browserHandleClick(this,'https://en.m.wikipedia.org')"><div class="app-logo">🌐</div><span>Wikipedia</span></div>
+                  <div class="browser-app-card" onclick="browserHandleClick(this,'https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d14115.115857217316!2d94.478!3d27.483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1700000000000')"><div class="app-logo">🗺️</div><span>Maps Embed</span></div>
+                  <div class="browser-app-card" onclick="browserHandleClick(this,'https://bing.com')"><div class="app-logo">🔍</div><span>Bing</span></div>
+                  <div class="browser-app-card" onclick="browserHandleClick(this,'https://google.com')"><div class="app-logo">✨</div><span>Google</span></div>
+                </div>
+              </div>
+              <iframe class="browser-iframe"></iframe>
+            </div>
+          </div>`;
+      } else if (app === 'recycle') {
+        content.innerHTML = `<div class="recycle-placeholder"><span style="font-size:60px;">🗑️</span><p style="color:#888;">Recycle bin is empty</p></div>`;
+      } else {
+        content.innerHTML = `<div style="padding:20px;color:#999;"><h3>${app}</h3><p>App content</p></div>`;
+      }
 
-  win.appendChild(bar);
-  win.appendChild(content);
-  document.body.appendChild(win);
-}
+      win.appendChild(bar);
+      win.appendChild(content);
+      document.body.appendChild(win);
+    };
 
-/* SMART ROUTING AND CONDITIONAL IFRAME ENGINE */
-function browserRouteEngine(inputElement) {
-  let query = inputElement.value.trim().toLowerCase();
-  if(!query) return;
-  
-  let targetContainer = inputElement.closest('.browser-container');
-  
-  // Exception Check 1: Wikipedia
-  if (query.includes("wikipedia")) {
-    loadInIframe(targetContainer, "https://en.m.wikipedia.org");
-    return;
-  }
-  // Exception Check 2: Google Maps
-  if (query.includes("maps") || query.includes("map")) {
-    loadInIframe(targetContainer, "https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d14115.115857217316!2d94.478!3d27.483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1700000000000");
-    return;
-  }
+    // === BACK TO HOME ===
+    function goHome() {
+      const win = document.querySelector('.window');
+      if (win) win.remove();
+      closeSettings();
+    }
 
-  // Default: Open everything else in a completely new window/tab
-  let destinationUrl = "";
-  if (query.includes('.') && !query.includes(' ')) {
-    destinationUrl = (query.startsWith("http://") || query.startsWith("https://")) ? query : "https://" + query;
-  } else {
-    destinationUrl = "https://www.google.com/search?q=" + encodeURIComponent(query);
-  }
-  window.open(destinationUrl, '_blank');
-  inputElement.value = "";
-}
+    window.addEventListener('popstate', function(e) { goHome(); });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' || e.key === 'Escape') {
+        const tag = e.target.tagName.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+        goHome();
+        e.preventDefault();
+      }
+    });
+    document.addEventListener('backbutton', function(e) { goHome(); e.preventDefault(); }, false);
+    history.pushState({ page: 'home' }, '');
 
-function browserHandleClick(element, targetUrl) {
-  let targetContainer = element.closest('.browser-container');
-  
-  // Handle the exceptions inside iframe
-  if (targetUrl.includes("wikipedia") || targetUrl.includes("maps")) {
-    loadInIframe(targetContainer, targetUrl);
-  } else {
-    // Open standard websites externally
-    window.open(targetUrl, '_blank');
-  }
-}
+    // === BROWSER ROUTING ===
+    window.browserRouteEngine = function(inputEl) {
+      let q = inputEl.value.trim();
+      if (!q) return;
+      const container = inputEl.closest('.browser-container');
+      const lower = q.toLowerCase();
+      if (lower.includes('wikipedia')) {
+        loadInIframe(container, 'https://en.m.wikipedia.org');
+        return;
+      }
+      if (lower.includes('maps') || lower.includes('map')) {
+        loadInIframe(container, 'https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d14115.115857217316!2d94.478!3d27.483!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e0!3m2!1sen!2sin!4v1700000000000');
+        return;
+      }
+      let url = '';
+      if (q.includes('.') && !q.includes(' ')) {
+        url = (q.startsWith('http://') || q.startsWith('https://')) ? q : 'https://' + q;
+      } else {
+        url = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+      }
+      window.open(url, '_blank');
+      inputEl.value = '';
+    };
 
-function loadInIframe(container, cleanUrl) {
-  let addressBar = container.querySelector('.browser-address-bar');
-  let homeScreen = container.querySelector('.browser-home-screen');
-  let iframe = container.querySelector('.browser-iframe');
-  let tabTitle = container.querySelector('.browser-tab span');
-  
-  addressBar.value = cleanUrl;
-  tabTitle.innerText = cleanUrl.includes("wikipedia") ? "Wikipedia" : "Google Maps";
-  
-  homeScreen.style.display = "none";
-  iframe.style.display = "block";
-  iframe.src = cleanUrl;
-}
+    window.browserHandleClick = function(el, target) {
+      const container = el.closest('.browser-container');
+      if (target.includes('wikipedia') || target.includes('maps')) {
+        loadInIframe(container, target);
+      } else {
+        window.open(target, '_blank');
+      }
+    };
 
-function browserHome(btnElement) {
-  let container = btnElement.closest('.browser-container');
-  let addressBar = container.querySelector('.browser-address-bar');
-  let homeScreen = container.querySelector('.browser-home-screen');
-  let iframe = container.querySelector('.browser-iframe');
-  let tabTitle = container.querySelector('.browser-tab span');
-  
-  if(addressBar) addressBar.value = "";
-  tabTitle.innerText = "🌐 New Tab";
-  iframe.src = "";
-  iframe.style.display = "none";
-  homeScreen.style.display = "flex";
-}
+    function loadInIframe(container, url) {
+      const address = container.querySelector('.browser-address-bar');
+      const home = container.querySelector('.browser-home-screen');
+      const iframe = container.querySelector('.browser-iframe');
+      const tab = container.querySelector('.browser-tab span');
+      if (address) address.value = url;
+      if (tab) tab.innerText = url.includes('wikipedia') ? 'Wikipedia' : 'Google Maps';
+      if (home) home.style.display = 'none';
+      if (iframe) {
+        iframe.style.display = 'block';
+        iframe.src = url;
+      }
+    }
 
-function browserRefresh(btnElement) {
-  let container = btnElement.closest('.browser-container');
-  let iframe = container.querySelector('.browser-iframe');
-  if(iframe && iframe.style.display !== "none" && iframe.src) {
-    let currentSrc = iframe.src;
-    iframe.src = '';
-    iframe.src = currentSrc;
-  }
-}
+    window.browserHome = function(btn) {
+      const container = btn.closest('.browser-container');
+      const address = container.querySelector('.browser-address-bar');
+      const home = container.querySelector('.browser-home-screen');
+      const iframe = container.querySelector('.browser-iframe');
+      const tab = container.querySelector('.browser-tab span');
+      if (address) address.value = '';
+      if (tab) tab.innerText = '🌐 New Tab';
+      if (iframe) { iframe.src = ''; iframe.style.display = 'none'; }
+      if (home) home.style.display = 'flex';
+    };
 
-/* Calculator Logic */
-function add(v){document.getElementById('display').value+=v;}
-function clearAll(){document.getElementById('display').value="";}
-function del(){document.getElementById('display').value=document.getElementById('display').value.slice(0,-1);}
-function calculate(){
-  try {
-    let rawInput = document.getElementById('display').value;
-    if(!rawInput) return;
-    document.getElementById('display').value=eval(rawInput);
-  } catch(e) {
-    alert("Syntax Calculation Error");
-  }
-}
+    window.browserRefresh = function(btn) {
+      const container = btn.closest('.browser-container');
+      const iframe = container.querySelector('.browser-iframe');
+      if (iframe && iframe.style.display !== 'none' && iframe.src) {
+        const src = iframe.src;
+        iframe.src = '';
+        iframe.src = src;
+      }
+    };
+
+    // === CALCULATOR ===
+    window.add = function(v) {
+      const disp = document.getElementById('display');
+      if (disp) disp.value += v;
+    };
+    window.clearAll = function() {
+      const disp = document.getElementById('display');
+      if (disp) disp.value = '';
+    };
+    window.del = function() {
+      const disp = document.getElementById('display');
+      if (disp) disp.value = disp.value.slice(0, -1);
+    };
+    window.calculate = function() {
+      const disp = document.getElementById('display');
+      if (!disp || !disp.value) return;
+      try {
+        disp.value = eval(disp.value);
+      } catch (_) {
+        alert('Syntax Error');
+      }
+    };
+
+    window.goHome = goHome;
+  })();
 </script>
-
 </body>
 </html>
