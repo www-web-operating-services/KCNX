@@ -17,7 +17,7 @@
       position: relative;
     }
 
-    /* === SYSTEM BOOT (simple KCNX) === */
+    /* === BOOT SCREEN - blocks all interaction === */
     #boot {
       position: fixed;
       inset: 0;
@@ -27,44 +27,34 @@
       align-items: center;
       justify-content: center;
       z-index: 99999;
-      transition: opacity 1.8s ease;
+      transition: opacity 2s ease;
+      pointer-events: all;
+      cursor: default;
+    }
+    #boot.hidden {
+      pointer-events: none;
+      opacity: 0;
+    }
+    #boot * {
       pointer-events: none;
     }
-    #boot .kcnx-logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-    }
-    #boot .kcnx-logo span {
-      font-size: clamp(50px, 12vw, 120px);
-      font-weight: 700;
-      color: #e50914;
-      text-transform: uppercase;
-      letter-spacing: -4px;
-      animation: bootZoom 2.4s ease-in-out forwards;
-      opacity: 0;
-      transform: scale(0.4);
-    }
-    @keyframes bootZoom {
-      0% { opacity: 0; transform: scale(0.4); }
-      25% { opacity: 1; transform: scale(1.1); }
-      50% { transform: scale(1); opacity: 1; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-    #boot .sub {
-      margin-top: 10px;
-      color: rgba(255,255,255,0.2);
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
+    #logo {
+      font-size: 52px;
+      letter-spacing: 10px;
       font-weight: 300;
-      animation: fadeSub 2.6s ease forwards;
       opacity: 0;
+      transition: 1.8s;
+      color: #f0f0ff;
+      font-family: 'Segoe UI', Roboto, sans-serif;
     }
-    @keyframes fadeSub {
-      0%, 60% { opacity: 0; }
-      100% { opacity: 1; }
+    #sub {
+      margin-top: 12px;
+      opacity: 0;
+      transition: 1.8s;
+      color: #7a7a8a;
+      font-size: 13px;
+      letter-spacing: 1px;
+      font-weight: 300;
     }
 
     /* === TOP STATUS BAR === */
@@ -121,11 +111,11 @@
     .wifi-icon.online .wifi-slash {
       opacity: 0;
     }
+    
     #time {
       font-weight: 500;
       font-size: 13px;
       letter-spacing: 0.5px;
-      cursor: pointer;
     }
     #weather {
       display: flex;
@@ -134,7 +124,9 @@
       font-size: 12px;
       font-weight: 400;
     }
-    #weather .temp { font-weight: 500; }
+    #weather .temp {
+      font-weight: 500;
+    }
     #battery {
       width: 24px;
       height: 12px;
@@ -159,6 +151,7 @@
       padding: 48px 12px 12px 12px;
       background: radial-gradient(circle at 30% 20%, #1e1e2f, #0c0c12 90%);
       overflow: hidden;
+      display: flex;
       flex-wrap: wrap;
       align-content: flex-start;
       justify-content: flex-start;
@@ -166,7 +159,6 @@
       box-sizing: border-box;
       position: relative;
     }
-    #desktop.active { display: flex; }
 
     .icon {
       width: calc(20% - 8px);
@@ -233,7 +225,9 @@
       padding: 50px 20px 20px 20px;
       font-family: 'Roboto', 'Segoe UI', sans-serif;
     }
-    #settingsPanel.open { right: 0; }
+    #settingsPanel.open {
+      right: 0;
+    }
     #settingsPanel .settings-header {
       display: flex;
       align-items: center;
@@ -254,6 +248,7 @@
       font-weight: 400;
       color: #e0e0e8;
       letter-spacing: 0.5px;
+      font-family: 'Roboto', 'Segoe UI', sans-serif;
     }
     .settings-item {
       display: flex;
@@ -265,7 +260,9 @@
       transition: background 0.15s;
       border-radius: 8px;
     }
-    .settings-item:hover { background: rgba(255,255,255,0.04); }
+    .settings-item:hover {
+      background: rgba(255,255,255,0.04);
+    }
     .settings-item svg {
       width: 24px;
       height: 24px;
@@ -274,7 +271,9 @@
       fill: none;
       flex-shrink: 0;
     }
-    .settings-item .info { flex: 1; }
+    .settings-item .info {
+      flex: 1;
+    }
     .settings-item .info .label {
       font-size: 14px;
       font-weight: 400;
@@ -285,7 +284,10 @@
       color: #8888a0;
       margin-top: 2px;
     }
-    .settings-item .value { font-size: 13px; color: #8888a0; }
+    .settings-item .value {
+      font-size: 13px;
+      color: #8888a0;
+    }
     .settings-item .toggle {
       width: 44px;
       height: 24px;
@@ -296,7 +298,9 @@
       cursor: pointer;
       flex-shrink: 0;
     }
-    .settings-item .toggle.active { background: #48d6b0; }
+    .settings-item .toggle.active {
+      background: #48d6b0;
+    }
     .settings-item .toggle .thumb {
       width: 20px;
       height: 20px;
@@ -307,7 +311,9 @@
       left: 2px;
       transition: 0.3s;
     }
-    .settings-item .toggle.active .thumb { left: 22px; }
+    .settings-item .toggle.active .thumb {
+      left: 22px;
+    }
 
     /* === WINDOW (APP CARD) === */
     .window {
@@ -555,60 +561,6 @@
       color: #777;
     }
 
-    /* === NETFLIX APP LOADING OVERLAY === */
-    #netflix-loader {
-      position: fixed;
-      inset: 0;
-      background: #000;
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 99999;
-      transition: opacity 1.2s ease;
-    }
-    #netflix-loader.show {
-      display: flex;
-    }
-    #netflix-loader.fade-out {
-      opacity: 0;
-      pointer-events: none;
-    }
-    #netflix-loader .kcnx-logo {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-    }
-    #netflix-loader .kcnx-logo span {
-      font-size: clamp(70px, 18vw, 180px);
-      font-weight: 900;
-      color: #e50914;
-      text-transform: uppercase;
-      letter-spacing: -6px;
-      animation: netflixZoom 3.6s ease-in-out forwards;
-      opacity: 0;
-      transform: scale(0.3);
-      text-shadow: 0 0 60px rgba(229, 9, 20, 0.25);
-    }
-    @keyframes netflixZoom {
-      0% { opacity: 0; transform: scale(0.3); }
-      18% { opacity: 1; transform: scale(1.12); }
-      40% { transform: scale(1); opacity: 1; }
-      70% { transform: scale(1); opacity: 1; }
-      100% { transform: scale(1.6); opacity: 0; }
-    }
-    #netflix-loader .sub {
-      margin-top: 12px;
-      color: rgba(255,255,255,0.15);
-      font-size: 13px;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      font-weight: 300;
-      animation: fadeSub 3.8s ease forwards;
-      opacity: 0;
-    }
-
     /* Overlay for settings */
     #settingsOverlay {
       position: fixed;
@@ -618,11 +570,8 @@
       display: none;
       transition: opacity 0.3s;
     }
-    #settingsOverlay.show { display: block; }
-
-    /* Hidden audio */
-    #bg-audio {
-      display: none;
+    #settingsOverlay.show {
+      display: block;
     }
 
     @media (max-width: 480px) {
@@ -642,23 +591,13 @@
 </head>
 <body>
 
-<!-- === SYSTEM BOOT (simple) === -->
+<!-- BOOT SCREEN - blocks all interaction -->
 <div id="boot">
-  <div class="kcnx-logo">
-    <span>K</span><span>C</span><span>N</span><span>X</span>
-  </div>
-  <div class="sub">Kedlestone · Cartes · Normal · Xenodocial</div>
+  <div id="logo">KCNX</div>
+  <div id="sub">Kedlestone · Cartes · Normal · Xenodocial</div>
 </div>
 
-<!-- === NETFLIX APP LOADER (KCNX intro with audio) === -->
-<div id="netflix-loader">
-  <div class="kcnx-logo">
-    <span>K</span><span>C</span><span>N</span><span>X</span>
-  </div>
-  <div class="sub">streaming now</div>
-</div>
-
-<!-- === TOP BAR === -->
+<!-- TOP BAR -->
 <div id="topbar">
   <div class="status-left">
     <div class="wifi-icon online" id="wifiIndicator">
@@ -681,89 +620,102 @@
   </div>
 </div>
 
-<!-- === DESKTOP === -->
+<!-- DESKTOP -->
 <div id="desktop">
-  <!-- App icons -->
-  <div class="icon" onclick="launchApp('Notepad','https://kcnx5730.github.io/ASTRONYX-data.html/')">
+  <!-- Row 1 -->
+  <div class="icon" onclick="window.open('https://kcnx5730.github.io/ASTRONYX-data.html/','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#f9ca24" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 8h8" stroke="#f0932b"/><path d="M8 12h6" stroke="#eb4d4b"/><path d="M8 16h4" stroke="#6ab04c"/></svg></div>
     <span>Notepad</span>
   </div>
-  <div class="icon" onclick="launchApp('calc')">
+  <div class="icon" onclick="openApp('calc')">
     <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#7ed6df" stroke-width="1.8"><rect x="4" y="2" width="16" height="20" rx="2" stroke="#22a6b3"/><path d="M8 6h8" stroke="#f0932b"/><path d="M8 10h8" stroke="#eb4d4b"/><path d="M8 14h4" stroke="#6ab04c"/><path d="M8 18h4" stroke="#f9ca24"/><circle cx="16" cy="10" r="1.5" fill="#f0932b" stroke="none"/><circle cx="16" cy="14" r="1.5" fill="#eb4d4b" stroke="none"/><circle cx="16" cy="18" r="1.5" fill="#6ab04c" stroke="none"/></svg></div>
     <span>Calculator</span>
   </div>
-  <div class="icon" onclick="launchApp('browser')">
+  <div class="icon" onclick="openApp('browser')">
     <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#f0932b" stroke-width="1.8"><circle cx="12" cy="12" r="10" stroke="#22a6b3"/><path d="M2 12h20" stroke="#6ab04c"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="#eb4d4b"/></svg></div>
     <span>Browser</span>
   </div>
-  <div class="icon" onclick="launchApp('recycle')">
+  <div class="icon" onclick="openApp('recycle')">
     <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#6ab04c" stroke-width="1.8"><path d="M3 6h18" stroke="#f0932b"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" stroke="#eb4d4b"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke="#f9ca24"/><path d="M10 11v6" stroke="#22a6b3"/><path d="M14 11v6" stroke="#7ed6df"/></svg></div>
     <span>Recycle</span>
   </div>
-  <div class="icon" onclick="launchApp('Store','https://poki.com')">
+  <div class="icon" onclick="window.open('https://poki.com','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#f0932b" stroke-width="1.8"><rect x="2" y="7" width="20" height="14" rx="2" stroke="#eb4d4b"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" stroke="#6ab04c"/></svg></div>
     <span>Store</span>
   </div>
-  <div class="icon" onclick="launchApp('Music','https://kcnx5730.github.io/kcnxPLAYER/')">
+
+  <!-- Row 2 -->
+  <div class="icon" onclick="window.open('https://kcnx5730.github.io/kcnxPLAYER/','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#7ed6df" stroke-width="1.8"><circle cx="8" cy="18" r="4" stroke="#f0932b"/><circle cx="18" cy="16" r="4" stroke="#eb4d4b"/><path d="M12 18V4l8 2v10" stroke="#6ab04c"/></svg></div>
     <span>Music</span>
   </div>
-  <div class="icon" onclick="launchApp('Messenger','https://kcnx5730.github.io/Messenger-KCNX/')">
+  <div class="icon" onclick="window.open('https://kcnx5730.github.io/Messenger-KCNX/','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24" fill="none" stroke="#f9ca24" stroke-width="1.8"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" stroke="#22a6b3"/></svg></div>
     <span>Messenger</span>
   </div>
-  <div class="icon" onclick="launchApp('Search','https://www.google.com')">
+  <div class="icon" onclick="window.open('https://www.google.com','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#4285F4"/><path d="M12 2v20" stroke="#fff" stroke-width="2"/><path d="M2 12h20" stroke="#fff" stroke-width="2"/></svg></div>
     <span>Search</span>
   </div>
-  <div class="icon" onclick="launchApp('Maps','https://maps.google.com')">
+  <div class="icon" onclick="window.open('https://maps.google.com','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11a8 8 0 0 1 16 0c0 6.5-8 11-8 11z" fill="#34A853"/><circle cx="12" cy="11" r="3" fill="#EA4335"/></svg></div>
     <span>Maps</span>
   </div>
-  <div class="icon" onclick="launchApp('YouTube','https://www.youtube.com')">
+  <div class="icon" onclick="window.open('https://www.youtube.com','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="4" fill="#FF0000"/><polygon points="9.75 8.5 16 12 9.75 15.5 9.75 8.5" fill="#fff"/></svg></div>
     <span>YouTube</span>
   </div>
-  <div class="icon" onclick="launchApp('Play Store','https://play.google.com/store')">
+
+  <!-- Row 3 -->
+  <div class="icon" onclick="window.open('https://play.google.com/store','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24"><path d="M4 4l12 8-12 8V4z" fill="#34A853"/><path d="M16 12l4-2.5-4-2.5v5z" fill="#EA4335"/><path d="M16 12l4 2.5-4 2.5v-5z" fill="#FBBC05"/></svg></div>
     <span>Play Store</span>
   </div>
-  <div class="icon" onclick="launchApp('Photos','https://photos.google.com')">
+  <div class="icon" onclick="window.open('https://photos.google.com','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" fill="#F4B400"/><circle cx="8.5" cy="8.5" r="1.5" fill="#EA4335"/><path d="M21 15l-5-5L5 21" stroke="#fff" stroke-width="2"/></svg></div>
     <span>Photos</span>
   </div>
-  <div class="icon" onclick="launchApp('Calendar','https://calendar.google.com')">
+  <div class="icon" onclick="window.open('https://calendar.google.com','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" fill="#4285F4"/><path d="M3 10h18" stroke="#fff" stroke-width="2"/><path d="M8 2v4" stroke="#fff" stroke-width="2"/><path d="M16 2v4" stroke="#fff" stroke-width="2"/></svg></div>
     <span>Calendar</span>
   </div>
-  <div class="icon" onclick="launchApp('Keep','https://keep.google.com')">
+  <div class="icon" onclick="window.open('https://keep.google.com','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" fill="#F4B400"/><path d="M8 8h8" stroke="#333" stroke-width="2"/><path d="M8 12h6" stroke="#333" stroke-width="2"/><path d="M8 16h4" stroke="#333" stroke-width="2"/></svg></div>
     <span>Keep</span>
   </div>
-  
-  <!-- NETFLIX APP with KCNX intro loader -->
-  <div class="icon" onclick="launchNetflix()">
+  <div class="icon" onclick="window.open('https://www.netflix.com','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="18" rx="2" fill="#E50914"/><text x="12" y="18" font-size="14" text-anchor="middle" fill="#fff" font-weight="bold" font-family="Arial">N</text></svg></div>
     <span>Netflix</span>
   </div>
-  
-  <div class="icon" onclick="launchApp('Amazon','https://www.amazon.com')">
+
+  <!-- Row 4 - Added KCNX Mini app with custom SVG -->
+  <div class="icon" onclick="window.open('https://kcnx5730.github.io/km/','_blank')">
+    <div class="icon-img">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#ff6b6b" stroke-width="2">
+        <rect x="2" y="4" width="20" height="16" rx="2" stroke="#ff6b6b"/>
+        <path d="M8 8h8" stroke="#ffd93d"/>
+        <path d="M8 12h6" stroke="#6bcb77"/>
+        <path d="M8 16h4" stroke="#4d96ff"/>
+        <circle cx="18" cy="8" r="1.5" fill="#ff6b6b" stroke="none"/>
+        <circle cx="18" cy="12" r="1.5" fill="#ffd93d" stroke="none"/>
+        <circle cx="18" cy="16" r="1.5" fill="#6bcb77" stroke="none"/>
+      </svg>
+    </div>
+    <span>KCNX Mini</span>
+  </div>
+  <div class="icon" onclick="window.open('https://www.amazon.com','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="#232F3E"/><path d="M8 15.5v-7l4 3.5-4 3.5z" fill="#FF9900"/><path d="M16 15.5v-7l-4 3.5 4 3.5z" fill="#FF9900"/></svg></div>
     <span>Amazon</span>
   </div>
-  <div class="icon" onclick="launchApp('Spotify','https://www.spotify.com')">
+  <div class="icon" onclick="window.open('https://www.spotify.com','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1DB954"/><path d="M8 10a5 5 0 0 1 8 0" stroke="#fff" stroke-width="1.5" fill="none"/><path d="M9 13a3 3 0 0 1 6 0" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="12" cy="16" r="1" fill="#fff"/></svg></div>
     <span>Spotify</span>
   </div>
-  <div class="icon" onclick="launchApp('Twitter','https://www.twitter.com')">
-    <div class="icon-img"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1DA1F2"/><path d="M8 16c3 0 4-2 4-4V8" stroke="#fff" stroke-width="2" fill="none"/><path d="M16 8l-2 2" stroke="#fff" stroke-width="2"/><path d="M16 12l-2-2" stroke="#fff" stroke-width="2"/></svg></div>
-    <span>Twitter</span>
-  </div>
-  <div class="icon" onclick="launchApp('Instagram','https://www.instagram.com')">
+  <div class="icon" onclick="window.open('https://www.instagram.com','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="#E4405F"/><circle cx="12" cy="12" r="5" fill="#fff"/><circle cx="17.5" cy="6.5" r="1.5" fill="#fff"/></svg></div>
     <span>Instagram</span>
   </div>
-  <div class="icon" onclick="launchApp('Facebook','https://www.facebook.com')">
+  <div class="icon" onclick="window.open('https://www.facebook.com','_blank')">
     <div class="icon-img"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#1877F2"/><path d="M16 8l-2 2" stroke="#fff" stroke-width="2"/><path d="M16 12l-2-2" stroke="#fff" stroke-width="2"/></svg></div>
     <span>Facebook</span>
   </div>
@@ -777,60 +729,72 @@
   <div class="settings-header">
     <svg viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="3"/>
-      <path d="M12 1v3"/><path d="M12 20v3"/>
+      <path d="M12 1v3"/>
+      <path d="M12 20v3"/>
       <path d="M4.22 4.22l2.12 2.12"/>
       <path d="M17.66 17.66l2.12 2.12"/>
-      <path d="M1 12h3"/><path d="M20 12h3"/>
+      <path d="M1 12h3"/>
+      <path d="M20 12h3"/>
       <path d="M4.22 19.78l2.12-2.12"/>
       <path d="M17.66 6.34l2.12-2.12"/>
     </svg>
     <h2>Settings</h2>
   </div>
+  
   <div class="settings-item">
     <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
     <div class="info"><div class="label">Display</div><div class="desc">Brightness, dark mode</div></div>
     <div class="value">Auto</div>
   </div>
+  
   <div class="settings-item">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     <div class="info"><div class="label">Wi-Fi</div><div class="desc">Connected to KCNX_Network</div></div>
     <div class="toggle active" onclick="this.classList.toggle('active')"><div class="thumb"></div></div>
   </div>
+  
   <div class="settings-item">
     <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M8 8h8"/><path d="M8 12h6"/><path d="M8 16h4"/></svg>
     <div class="info"><div class="label">Bluetooth</div><div class="desc">Off</div></div>
     <div class="toggle" onclick="this.classList.toggle('active')"><div class="thumb"></div></div>
   </div>
+  
   <div class="settings-item">
     <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v3"/><path d="M12 20v3"/><path d="M4.22 4.22l2.12 2.12"/><path d="M17.66 17.66l2.12 2.12"/><path d="M1 12h3"/><path d="M20 12h3"/><path d="M4.22 19.78l2.12-2.12"/><path d="M17.66 6.34l2.12-2.12"/></svg>
     <div class="info"><div class="label">Location</div><div class="desc">On</div></div>
     <div class="toggle active" onclick="this.classList.toggle('active')"><div class="thumb"></div></div>
   </div>
+  
   <div class="settings-item">
     <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M8 12h8"/></svg>
     <div class="info"><div class="label">Sound & Vibration</div><div class="desc">Ring, silent, vibrate</div></div>
     <div class="value">Ring</div>
   </div>
+  
   <div class="settings-item">
     <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
     <div class="info"><div class="label">Security</div><div class="desc">Fingerprint, face unlock</div></div>
     <div class="value">On</div>
   </div>
+  
   <div class="settings-item">
     <svg viewBox="0 0 24 24"><path d="M21 10.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9.5"/><polyline points="16 2 22 8 16 8"/><line x1="10" y1="14" x2="21" y2="3"/><line x1="21" y1="3" x2="16" y2="3"/><line x1="16" y1="8" x2="16" y2="8"/></svg>
     <div class="info"><div class="label">Storage</div><div class="desc">32.4 GB used of 128 GB</div></div>
     <div class="value">75%</div>
   </div>
+  
   <div class="settings-item">
     <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
     <div class="info"><div class="label">Battery</div><div class="desc">Charging, battery health</div></div>
     <div class="value">85%</div>
   </div>
+  
   <div class="settings-item">
     <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     <div class="info"><div class="label">Accounts</div><div class="desc">Google, KCNX, email</div></div>
     <div class="value">3</div>
   </div>
+  
   <div class="settings-item">
     <svg viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
     <div class="info"><div class="label">About Phone</div><div class="desc">KCNX OS 3.0, build KX-2026</div></div>
@@ -838,73 +802,180 @@
   </div>
 </div>
 
-<!-- === BACKGROUND AUDIO (only for Netflix loader) === -->
-<audio id="bg-audio" preload="auto">
-  <source src="https://res.cloudinary.com/ccmt3psw/video/upload/v1785604165/Netflix_intro_-_QuickSounds.com_junlgu.mp3" type="audio/mpeg" />
-</audio>
+<audio id="audio" src="https://files.catbox.moe/qmismt.mp3"></audio>
 
 <script>
   (function() {
-    'use strict';
-
-    // ─── DOM refs ───
+    // === BOOT SEQUENCE ===
     const boot = document.getElementById('boot');
+    const logo = document.getElementById('logo');
+    const sub = document.getElementById('sub');
     const desktop = document.getElementById('desktop');
     const topbar = document.getElementById('topbar');
     const timeEl = document.getElementById('time');
     const level = document.getElementById('level');
-    const audio = document.getElementById('bg-audio');
+    const audio = document.getElementById('audio');
     const wifiIndicator = document.getElementById('wifiIndicator');
     const settingsPanel = document.getElementById('settingsPanel');
     const settingsOverlay = document.getElementById('settingsOverlay');
-    const netflixLoader = document.getElementById('netflix-loader');
 
-    // ─── SYSTEM BOOT ───
-    setTimeout(() => {
-      boot.style.opacity = '0';
-    }, 2600);
-
+    setTimeout(() => { logo.style.opacity = '1'; sub.style.opacity = '1'; }, 1000);
+    setTimeout(() => { boot.classList.add('hidden'); }, 3500);
     setTimeout(() => {
       boot.style.display = 'none';
-      desktop.classList.add('active');
+      desktop.style.display = 'flex';
       topbar.style.display = 'flex';
-    }, 3200);
+      try { audio.currentTime = 15; audio.play(); } catch (_) {}
+    }, 4500);
 
-    // ─── NETFLIX APP LAUNCH with KCNX intro & audio ───
-    window.launchNetflix = function() {
-      // Show loader
-      netflixLoader.classList.add('show');
-      netflixLoader.classList.remove('fade-out');
+    // === TIME (12-hour with AM/PM) ===
+    function updateTime() {
+      const d = new Date();
+      let hours = d.getHours();
+      const minutes = d.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12 || 12;
+      timeEl.textContent = `${hours}:${minutes} ${ampm}`;
+    }
+    updateTime();
+    setInterval(updateTime, 1000);
 
-      // Play audio
-      audio.currentTime = 0;
-      audio.play().catch(() => {
-        // If autoplay blocked, wait for user click
-        document.addEventListener('click', function playOnClick() {
-          audio.play().catch(() => {});
-          document.removeEventListener('click', playOnClick);
-        }, { once: true });
-      });
+    // === WEATHER (from wttr.in) ===
+    function fetchWeather() {
+      fetch('https://wttr.in?format=%C+%t&lang=en')
+        .then(res => res.text())
+        .then(data => {
+          const parts = data.trim().split(/\s+/);
+          const temp = parts[parts.length - 1] || '--°';
+          const condition = parts.slice(0, -1).join(' ') || 'Unknown';
+          document.getElementById('temperature').textContent = temp;
+          
+          const iconMap = {
+            'clear': '☀️',
+            'sunny': '☀️',
+            'partly': '⛅',
+            'cloud': '☁️',
+            'rain': '🌧️',
+            'drizzle': '🌦️',
+            'thunder': '⛈️',
+            'snow': '❄️',
+            'mist': '🌫️',
+            'fog': '🌫️'
+          };
+          let icon = '🌤️';
+          const lower = condition.toLowerCase();
+          for (const [key, value] of Object.entries(iconMap)) {
+            if (lower.includes(key)) { icon = value; break; }
+          }
+          document.getElementById('weatherIcon').textContent = icon;
+        })
+        .catch(() => {
+          document.getElementById('temperature').textContent = '--°';
+          document.getElementById('weatherIcon').textContent = '🌤️';
+        });
+    }
+    fetchWeather();
+    setInterval(fetchWeather, 600000);
 
-      // After animation (3.6s), hide loader and open Netflix
-      setTimeout(() => {
-        netflixLoader.classList.add('fade-out');
-        setTimeout(() => {
-          netflixLoader.classList.remove('show');
-          // Open Netflix in new window
-          window.open('https://www.netflix.com', '_blank');
-        }, 1200);
-      }, 3800);
-    };
-
-    // ─── OTHER APP LAUNCH (no audio) ───
-    window.launchApp = function(app, url) {
-      if (url) {
-        window.open(url, '_blank');
-        return;
+    // === WiFi STATUS ===
+    function updateWiFi() {
+      const online = navigator.onLine;
+      const wifiEl = document.getElementById('wifiIndicator');
+      const slash = wifiEl.querySelector('.wifi-slash');
+      if (online) {
+        wifiEl.classList.remove('offline');
+        wifiEl.classList.add('online');
+        if (slash) slash.setAttribute('opacity', '0');
+      } else {
+        wifiEl.classList.remove('online');
+        wifiEl.classList.add('offline');
+        if (slash) slash.setAttribute('opacity', '1');
       }
+    }
+    window.addEventListener('online', updateWiFi);
+    window.addEventListener('offline', updateWiFi);
+    updateWiFi();
 
-      // Internal app
+    // === BATTERY ===
+    let lvl = 100;
+    setInterval(() => {
+      lvl -= 1;
+      if (lvl < 0) lvl = 100;
+      level.style.width = lvl + '%';
+      if (lvl > 50) level.style.background = '#00e6b8';
+      else if (lvl > 20) level.style.background = '#f2b83a';
+      else level.style.background = '#e74c4c';
+    }, 5000);
+
+    // === SETTINGS PANEL (swipe from right) ===
+    let touchStartX = 0;
+    let touchEndX = 0;
+    let isSwiping = false;
+
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      isSwiping = true;
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!isSwiping) return;
+      touchEndX = e.changedTouches[0].screenX;
+      const diff = touchStartX - touchEndX;
+      const isOpen = settingsPanel.classList.contains('open');
+      
+      if (touchStartX > window.innerWidth - 50 && diff > 80) {
+        openSettings();
+        isSwiping = false;
+      } else if (isOpen && diff < -80) {
+        closeSettings();
+        isSwiping = false;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', () => {
+      isSwiping = false;
+    }, { passive: true });
+
+    let mouseDownX = 0;
+    let isDragging = false;
+    document.addEventListener('mousedown', (e) => {
+      mouseDownX = e.screenX;
+      isDragging = true;
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const diff = mouseDownX - e.screenX;
+      if (mouseDownX > window.innerWidth - 50 && diff > 100) {
+        openSettings();
+        isDragging = false;
+      }
+    });
+    document.addEventListener('mouseup', () => { isDragging = false; });
+
+    settingsOverlay.addEventListener('click', closeSettings);
+
+    let timeClicks = 0;
+    timeEl.addEventListener('click', () => {
+      timeClicks++;
+      if (timeClicks === 2) {
+        openSettings();
+        timeClicks = 0;
+      }
+      setTimeout(() => { timeClicks = 0; }, 500);
+    });
+
+    function openSettings() {
+      settingsPanel.classList.add('open');
+      settingsOverlay.classList.add('show');
+    }
+
+    function closeSettings() {
+      settingsPanel.classList.remove('open');
+      settingsOverlay.classList.remove('show');
+    }
+
+    // === APP WINDOW ===
+    window.openApp = function(app) {
       const existing = document.querySelector('.window');
       if (existing) existing.remove();
 
@@ -984,140 +1055,26 @@
       document.body.appendChild(win);
     };
 
-    // ─── TIME ───
-    function updateTime() {
-      const d = new Date();
-      let hours = d.getHours();
-      const minutes = d.getMinutes().toString().padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12 || 12;
-      timeEl.textContent = `${hours}:${minutes} ${ampm}`;
+    // === BACK TO HOME ===
+    function goHome() {
+      const win = document.querySelector('.window');
+      if (win) win.remove();
+      closeSettings();
     }
-    updateTime();
-    setInterval(updateTime, 1000);
 
-    // ─── WEATHER ───
-    function fetchWeather() {
-      fetch('https://wttr.in?format=%C+%t&lang=en')
-        .then(res => res.text())
-        .then(data => {
-          const parts = data.trim().split(/\s+/);
-          const temp = parts[parts.length - 1] || '--°';
-          const condition = parts.slice(0, -1).join(' ') || 'Unknown';
-          document.getElementById('temperature').textContent = temp;
-          const iconMap = {
-            'clear': '☀️', 'sunny': '☀️', 'partly': '⛅', 'cloud': '☁️',
-            'rain': '🌧️', 'drizzle': '🌦️', 'thunder': '⛈️', 'snow': '❄️',
-            'mist': '🌫️', 'fog': '🌫️'
-          };
-          let icon = '🌤️';
-          const lower = condition.toLowerCase();
-          for (const [key, value] of Object.entries(iconMap)) {
-            if (lower.includes(key)) { icon = value; break; }
-          }
-          document.getElementById('weatherIcon').textContent = icon;
-        })
-        .catch(() => {
-          document.getElementById('temperature').textContent = '--°';
-          document.getElementById('weatherIcon').textContent = '🌤️';
-        });
-    }
-    fetchWeather();
-    setInterval(fetchWeather, 600000);
-
-    // ─── WiFi ───
-    function updateWiFi() {
-      const online = navigator.onLine;
-      const wifiEl = document.getElementById('wifiIndicator');
-      const slash = wifiEl.querySelector('.wifi-slash');
-      if (online) {
-        wifiEl.classList.remove('offline');
-        wifiEl.classList.add('online');
-        if (slash) slash.setAttribute('opacity', '0');
-      } else {
-        wifiEl.classList.remove('online');
-        wifiEl.classList.add('offline');
-        if (slash) slash.setAttribute('opacity', '1');
-      }
-    }
-    window.addEventListener('online', updateWiFi);
-    window.addEventListener('offline', updateWiFi);
-    updateWiFi();
-
-    // ─── BATTERY ───
-    let lvl = 100;
-    setInterval(() => {
-      lvl -= 1;
-      if (lvl < 0) lvl = 100;
-      level.style.width = lvl + '%';
-      if (lvl > 50) level.style.background = '#00e6b8';
-      else if (lvl > 20) level.style.background = '#f2b83a';
-      else level.style.background = '#e74c4c';
-    }, 5000);
-
-    // ─── SETTINGS PANEL ───
-    let touchStartX = 0;
-    let isSwiping = false;
-
-    document.addEventListener('touchstart', (e) => {
-      touchStartX = e.changedTouches[0].screenX;
-      isSwiping = true;
-    }, { passive: true });
-
-    document.addEventListener('touchmove', (e) => {
-      if (!isSwiping) return;
-      const diff = touchStartX - e.changedTouches[0].screenX;
-      const isOpen = settingsPanel.classList.contains('open');
-      if (touchStartX > window.innerWidth - 50 && diff > 80) {
-        openSettings();
-        isSwiping = false;
-      } else if (isOpen && diff < -80) {
-        closeSettings();
-        isSwiping = false;
-      }
-    }, { passive: true });
-
-    document.addEventListener('touchend', () => { isSwiping = false; }, { passive: true });
-
-    let mouseDownX = 0;
-    let isDragging = false;
-    document.addEventListener('mousedown', (e) => {
-      mouseDownX = e.screenX;
-      isDragging = true;
-    });
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      const diff = mouseDownX - e.screenX;
-      if (mouseDownX > window.innerWidth - 50 && diff > 100) {
-        openSettings();
-        isDragging = false;
+    window.addEventListener('popstate', function(e) { goHome(); });
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Backspace' || e.key === 'Escape') {
+        const tag = e.target.tagName.toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+        goHome();
+        e.preventDefault();
       }
     });
-    document.addEventListener('mouseup', () => { isDragging = false; });
+    document.addEventListener('backbutton', function(e) { goHome(); e.preventDefault(); }, false);
+    history.pushState({ page: 'home' }, '');
 
-    settingsOverlay.addEventListener('click', closeSettings);
-
-    let timeClicks = 0;
-    timeEl.addEventListener('click', () => {
-      timeClicks++;
-      if (timeClicks === 2) {
-        openSettings();
-        timeClicks = 0;
-      }
-      setTimeout(() => { timeClicks = 0; }, 500);
-    });
-
-    function openSettings() {
-      settingsPanel.classList.add('open');
-      settingsOverlay.classList.add('show');
-    }
-
-    function closeSettings() {
-      settingsPanel.classList.remove('open');
-      settingsOverlay.classList.remove('show');
-    }
-
-    // ─── BROWSER ROUTING ───
+    // === BROWSER ROUTING ===
     window.browserRouteEngine = function(inputEl) {
       let q = inputEl.value.trim();
       if (!q) return;
@@ -1186,7 +1143,7 @@
       }
     };
 
-    // ─── CALCULATOR ───
+    // === CALCULATOR ===
     window.add = function(v) {
       const disp = document.getElementById('display');
       if (disp) disp.value += v;
@@ -1209,33 +1166,7 @@
       }
     };
 
-    // ─── GO HOME ───
-    window.goHome = function() {
-      const win = document.querySelector('.window');
-      if (win) win.remove();
-      closeSettings();
-    };
-
-    window.addEventListener('popstate', function(e) { goHome(); });
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Backspace' || e.key === 'Escape') {
-        const tag = e.target.tagName.toLowerCase();
-        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
-        goHome();
-        e.preventDefault();
-      }
-    });
-    document.addEventListener('backbutton', function(e) { goHome(); e.preventDefault(); }, false);
-    history.pushState({ page: 'home' }, '');
-
-    // ─── KCNX APP ICON SVG ───
-    window.KCNX_ICON_SVG = `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <rect width="100" height="100" rx="20" fill="#e50914" />
-      <text x="50" y="68" font-family="Arial, sans-serif" font-size="52" font-weight="900" fill="#fff" text-anchor="middle" letter-spacing="2">K</text>
-      <circle cx="50" cy="85" r="4" fill="#fff" opacity="0.3" />
-    </svg>`;
-
-    console.log('KCNX OS loaded. Netflix app has KCNX intro with audio.');
+    window.goHome = goHome;
   })();
 </script>
 </body>
